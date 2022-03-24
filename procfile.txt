@@ -1,0 +1,3 @@
+# procfile.txt
+
+web: gunicorn app:server
