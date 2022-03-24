@@ -23,7 +23,7 @@ app.title = "Avocado Analytics: Understand your Avocados!"
 
 # Definfing the Layout of the App
 app.layout = html.Div(
-    children = [
+    children=[
         html.Div(
             children=[
                 html.P(children='🥑', className='header-emoji'),
@@ -52,6 +52,38 @@ app.layout = html.Div(
                             value="Albany",
                             clearable=False,
                             className="dropdown",
+                        ),
+                    ]
+                ),
+                html.Div(
+                    children=[
+                        html.Div(children="Type", className="menu-title"),
+                        dcc.Dropdown(
+                            id="type-filter",
+                            options=[
+                                {"label": avocado_type,
+                                 "value": avocado_type}
+                                for avocado_type in data.type.unique()
+                            ],
+                            value="organic",
+                            clearable=False,
+                            searchable=False,
+                            className="dropdown",
+                        ),
+                    ],
+                ),
+                html.Div(
+                    children=[
+                        html.Div(
+                            children="Date Range",
+                            className="menu-title"
+                        ),
+                        dcc.DatePickerRange(
+                            id="date-range",
+                            min_date_allowed=data.Date.min().date(),
+                            max_date_allowed=data.Date.max().date(),
+                            start_date=data.Date.min().date(),
+                            end_date=data.Date.max().date(),
                         ),
                     ]
                 ),
@@ -84,11 +116,17 @@ app.layout = html.Div(
 @app.callback(
     [Output("price-chart", "figure"),
      Output("volume-chart", "figure")],
-    [Input("region-filter", "value"), ]
+    [Input("region-filter", "value"),
+     Input("type-filter", "value"),
+     Input("date-range", "start_date"),
+     Input("date-range", "end_date"), ],
 )
-def update_charts(region):
+def update_charts(region, avocado_type, start_date, end_date):
     mask = (
         (data.region == region)
+        & (data.type == avocado_type)
+        & (data.Date >= start_date)
+        & (data.Date <= end_date)
     )
     filtered_data = data.loc[mask, :]
     price_chart_figure = {
